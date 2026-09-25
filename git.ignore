@@ -1,0 +1,32 @@
+# Synopsys Log and Temporary Files
+*.log
+*.svf
+*.pvl
+*.syn
+*.mr
+*.pvk
+command.log
+default.svf
+alib-52/
+alib-130/
+FM_WORK/
+
+# Project Specific Directories (Generated Data)
+outputs/
+reports/
+work/
+
+# Large Binary Databases & Libraries
+*.db
+*.ndm
+*.mw
+
+# Parasitic, Constraint, and Layout Data
+*.spef
+*.def
+*.sdc
+
+# OS and Editor Temp Files
+.DS_Store
+*~
+*.swp
