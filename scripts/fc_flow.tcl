@@ -1,10 +1,13 @@
-# 1. Setup Libraries (REPLACE PATHS WITH YOUR NANOHUB PATHS)
-set tech_lib "/path/to/freepdk/logic/freepdk45_typical.db"
-set phys_lib "/path/to/freepdk/phys/freepdk45_tech.ndm"
+# 1. Setup Libraries
+set tech_lib "/apps/share64/rocky8/freepdk/freepdk45-1.4/FreePDK45/osu_soc/lib/files/gscl45nm.db"
+set phys_lef "/apps/share64/rocky8/freepdk/freepdk45-1.4/FreePDK45/osu_soc/lib/files/gscl45nm.lef"
+
 set target_library $tech_lib
 set link_library "* $tech_lib"
 
-create_lib workspace_rv32 -technology $phys_lib -ref_libs $phys_lib
+# Create the workspace and read the physical LEF shapes
+create_lib workspace_rv32
+read_lef $phys_lef
 
 # 2. Read RTL & Synthesize
 read_verilog ../rtl/picorv32.v

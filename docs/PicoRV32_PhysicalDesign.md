@@ -40,6 +40,12 @@ find /apps/share64/rocky8/freepdk -name "*.db" -o -name "*.ndm" -o -name "*.lef"
 
 Note the paths to the logical library (`.db`) and physical library (`.ndm` or `.lef`). You will need to insert these into the Tcl scripts below.
 
+If the physical library (.ndm or .lef) path does not show, run the following command to find it: 
+
+```bash
+find /apps/share64/rocky8/freepdk/freepdk45-1.4 -name "*.lef" 2>/dev/null
+```
+
 ---
 
 ## Phase 2: Synthesis & Physical Implementation
