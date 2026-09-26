@@ -1,12 +1,13 @@
-# 1. Setup Libraries
-set tech_lib "/apps/share64/rocky8/freepdk/freepdk45-1.4/FreePDK45/osu_soc/lib/files/gscl45nm.db"
-set phys_ndm "freepdk45.ndm"
+# 1. Setup Libraries & Technology LEF
+set tech_db "/apps/share64/rocky8/freepdk/freepdk45-1.4/FreePDK45/osu_soc/lib/files/gscl45nm.db"
+set phys_lef "/apps/share64/rocky8/freepdk/freepdk45-1.4/FreePDK45/osu_soc/lib/files/gscl45nm.lef"
 
-set target_library $tech_lib
-set link_library "* $tech_lib"
+set target_library $tech_db
+set link_library "* $tech_db"
 
-# Create the Fusion Compiler workspace using the compiled NDM
-create_lib workspace_rv32 -ref_libs $phys_ndm
+# Create design library and read physical LEF
+create_lib workspace_rv32
+read_lef $phys_lef
 
 # 2. Read RTL & Synthesize
 read_verilog ../rtl/picorv32.v
