@@ -5,13 +5,17 @@ set phys_lef "/apps/share64/rocky8/freepdk/freepdk45-1.4/FreePDK45/osu_soc/lib/f
 set target_library $tech_db
 set link_library "* $tech_db"
 
-# Safely clear out any previously loaded workspace in memory
-catch { close_block -save no }
-catch { remove_lib workspace_rv32 }
-
-# Create design library and read physical LEF
-create_lib workspace_rv32
-read_lef $phys_lef
+# Safely handle existing libraries in session memory
+if {[get_libs -quiet workspace_rv32] eq ""} {
+    if {[file exists workspace_rv32]} {
+        open_lib workspace_rv32
+    } else {
+        create_lib workspace_rv32
+        read_lef $phys_lef
+    }
+} else {
+    current_lib workspace_rv32
+}
 
 # 2. Read RTL & Synthesize
 read_verilog ../rtl/picorv32.v
