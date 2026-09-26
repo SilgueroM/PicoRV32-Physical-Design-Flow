@@ -5,6 +5,11 @@ set phys_lef "/apps/share64/rocky8/freepdk/freepdk45-1.4/FreePDK45/osu_soc/lib/f
 set target_library $tech_db
 set link_library "* $tech_db"
 
+# Safely remove old library if it exists so re-running works cleanly
+if {[file exists workspace_rv32]} {
+    remove_lib workspace_rv32
+}
+
 # Create design library and read physical LEF
 create_lib workspace_rv32
 read_lef $phys_lef
