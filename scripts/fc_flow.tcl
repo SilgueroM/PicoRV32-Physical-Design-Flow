@@ -1,21 +1,15 @@
-# 1. Setup Libraries & Technology LEF
+# 1. Setup Libraries & Exact Verified Paths
 set tech_db "/apps/share64/rocky8/freepdk/freepdk45-1.4/FreePDK45/osu_soc/lib/files/gscl45nm.db"
 set phys_lef "/apps/share64/rocky8/freepdk/freepdk45-1.4/FreePDK45/osu_soc/lib/files/gscl45nm.lef"
 
 set target_library $tech_db
 set link_library "* $tech_db"
 
-# Safely handle existing libraries in session memory
-if {[get_libs -quiet workspace_rv32] eq ""} {
-    if {[file exists workspace_rv32]} {
-        open_lib workspace_rv32
-    } else {
-        create_lib workspace_rv32
-        read_lef $phys_lef
-    }
-} else {
-    current_lib workspace_rv32
-}
+# Safely clear out any cached library session state so re-running never crashes
+catch { remove_lib workspace_rv32 }
+
+# Create design library and bind the physical tech LEF natively
+create_lib workspace_rv32 -technology $phys_lef
 
 # 2. Read RTL & Synthesize
 read_verilog ../rtl/picorv32.v
