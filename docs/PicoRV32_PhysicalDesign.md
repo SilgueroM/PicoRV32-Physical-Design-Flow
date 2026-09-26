@@ -19,7 +19,7 @@ This repository contains a complete backend ASIC physical design pipeline for th
 
 ## Phase 1: Environment Setup on nanoHUB
 
-This flow targets the SAED 32nm educational process node available on nanoHUB.
+This flow targets the FreePDK educational process node (typically 45nm) available on nanoHUB.
 
 ### 1. Build the Workspace
 Launch the XTerm terminal from the nanoHUB Synopsys menu, initialize the directory structure, and download the single-file PicoRV32 RTL:
@@ -27,19 +27,18 @@ Launch the XTerm terminal from the nanoHUB Synopsys menu, initialize the directo
 ```bash
 mkdir -p asic_flow_project/{rtl,scripts,work,reports,outputs,media}
 cd asic_flow_project/rtl
-wget https://raw.githubusercontent.com/YosysHQ/picorv32/master/picorv32.v
+wget [https://raw.githubusercontent.com/YosysHQ/picorv32/master/picorv32.v](https://raw.githubusercontent.com/YosysHQ/picorv32/master/picorv32.v)
 cd ..
 ```
 
 ### 2. Locate Standard Cell Libraries
-You need the absolute paths to the SAED technology files on the nanoHUB server. Run these commands to find them:
+You need the absolute paths to the FreePDK technology files on the nanoHUB server. Run this targeted command to instantly find them without freezing the server:
 
 ```bash
-find / -name "saed32*.db" 2>/dev/null
-find / -name "*.ndm" 2>/dev/null
+find /apps/share64/rocky8/freepdk -name "*.db" -o -name "*.ndm" -o -name "*.lef" 2>/dev/null
 ```
 
-Note the paths to the logical library (`.db`) and physical library (`.ndm`). You will need to insert these into the Tcl scripts below.
+Note the paths to the logical library (`.db`) and physical library (`.ndm` or `.lef`). You will need to insert these into the Tcl scripts below.
 
 ---
 
@@ -48,12 +47,12 @@ Note the paths to the logical library (`.db`) and physical library (`.ndm`). You
 We use Fusion Compiler to manage logical synthesis and physical routing within a single run.
 
 ### 1. Create the Flow Script (`scripts/fc_flow.tcl`)
-Open VS Code via nanoHUB, create this file, and update the `tech_lib` and `phys_lib` paths.
+Open VS Code via nanoHUB, create this file, and update the `tech_lib` and `phys_lib` paths based on the output of your search.
 
 ```tcl
 # 1. Setup Libraries (REPLACE PATHS WITH YOUR NANOHUB PATHS)
-set tech_lib "/path/to/saed32/logic/saed32rvt_tt1v25c.db"
-set phys_lib "/path/to/saed32/phys/saed32_tech.ndm"
+set tech_lib "/path/to/freepdk/logic/freepdk45_typical.db"
+set phys_lib "/path/to/freepdk/phys/freepdk45_tech.ndm"
 set target_library $tech_lib
 set link_library "* $tech_lib"
 
@@ -111,7 +110,7 @@ Physical wire delays introduced during routing must be extracted and analyzed to
 ### 1. Parasitic Extraction (StarRC)
 Launch StarRC from the nanoHUB menu.
 
-Create a command file (`scripts/starrc.cmd`) pointing to your routed `../outputs/picorv32.def` and the SAED32 technology mapping file.
+Create a command file (`scripts/starrc.cmd`) pointing to your routed `../outputs/picorv32.def` and the FreePDK technology mapping file.
 
 Run StarRC to output a sign-off quality SPEF file: `../outputs/picorv32_signoff.spef`.
 
@@ -119,7 +118,7 @@ Run StarRC to output a sign-off quality SPEF file: `../outputs/picorv32_signoff.
 Create `scripts/pt_sta.tcl`:
 
 ```tcl
-set target_library "/path/to/saed32/logic/saed32rvt_tt1v25c.db"
+set target_library "/path/to/freepdk/logic/freepdk45_typical.db"
 set link_library "* $target_library"
 
 read_verilog ../outputs/picorv32_routed.v
@@ -151,7 +150,7 @@ Use Formality to mathematically prove the routed netlist maintains strict functi
 ### 1. Create the LEC Script (`scripts/fm_lec.tcl`)
 
 ```tcl
-set target_library "/path/to/saed32/logic/saed32rvt_tt1v25c.db"
+set target_library "/path/to/freepdk/logic/freepdk45_typical.db"
 read_db $target_library
 
 # Golden RTL
@@ -200,7 +199,7 @@ To solidify this project for recruiters, generate visual proof of your physical 
 ---
 
 ## Notes and Tips
-* Replace all placeholder paths (e.g., `/path/to/saed32/...`) with the actual absolute paths on the nanoHUB environment.
+* Replace all placeholder paths (e.g., `/path/to/freepdk/...`) with the actual absolute paths on the nanoHUB environment.
 * Keep generated large files (DEF, SPEF, routed netlists) out of Git by listing them in `.gitignore`.
 * When running GUI flows, capture high-resolution screenshots for portfolio presentation.
 * Verify library versions and timing corners used for synthesis and STA match the educational process node documentation on nanoHUB.
@@ -209,4 +208,3 @@ To solidify this project for recruiters, generate visual proof of your physical 
 
 ## License
 Include an appropriate license for your repository (e.g., MIT, Apache 2.0) depending on how you want to share your scripts and assets.
-```
