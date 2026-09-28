@@ -66,9 +66,13 @@ create_clock -name clk -period 2.0 [get_ports clk]
 compile_fusion -to initial_map
 
 # ==============================================================================
-# 5. Floorplanning
+# 5. Floorplanning & Power Connections
 # ==============================================================================
 initialize_floorplan -core_utilization 0.65 -shape R
+
+# Explicitly connect the global power/ground nets to the design pins natively in FC
+connect_pg_net -net VDD [get_pins -hierarchical "VPWR"]
+connect_pg_net -net VSS [get_pins -hierarchical "VGND"]
 
 # ==============================================================================
 # 6. Placement, CTS, and Routing
