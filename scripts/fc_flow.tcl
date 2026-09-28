@@ -49,20 +49,19 @@ catch { remove_lib workspace_rv32 }
 create_lib workspace_rv32 -technology $tech_file -ref_libs $phys_ndm
 
 # ==============================================================================
-# 4. Design Read, Elaborate & Set Top Module
+# 4. Design Read, Elaborate & Map
 # ==============================================================================
 analyze -format sverilog "$proj_root/rtl/picorv32.v"
 elaborate picorv32
 link
 
-# Explicitly bind design context for constraints and synthesis
 current_design picorv32
 set_top_module picorv32
 
-# Clock Constraint (500 MHz / 2.0ns period)
+# 2.0ns Clock Constraint (500 MHz)
 create_clock -name clk -period 2.0 [get_ports clk]
 
-# Execute initial logic synthesis map
+# Map RTL to technology logic gates before placement
 compile_fusion -to initial_map
 
 # ==============================================================================
@@ -71,18 +70,10 @@ compile_fusion -to initial_map
 initialize_floorplan -core_utilization 0.65 -shape R
 
 # ==============================================================================
-# 6. Synthesis, Placement, CTS, and Routing
+# 6. Placement, CTS, and Routing
 # ==============================================================================
-# Run initial logic mapping
-compile_fusion -to initial_map
-
-# Run placement and optimization
 place_opt
-
-# Clock Tree Synthesis
 clock_opt
-
-# Global and Detailed Routing
 route_auto
 route_opt
 
