@@ -74,9 +74,7 @@ initialize_floorplan -core_utilization 0.65 -shape R -site unit
 # ==============================================================================
 compile_fusion -to initial_map
 
-# Explicitly create a placement region to contain the instances during initial place
-create_placement_blockage -coordinate {0 0 100 100} -type soft -name placer_boundary_fix
-
+# Run placement natively without invalid blockage syntax
 place_opt
 clock_opt
 route_auto
