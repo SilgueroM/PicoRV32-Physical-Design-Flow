@@ -72,7 +72,8 @@ initialize_floorplan -core_utilization 0.65 -shape R -site unit
 # ==============================================================================
 # 6. Placement, CTS, and Routing
 # ==============================================================================
-compile_fusion -to initial_map
+# Allow the placer to automatically fix max_capacitance and transition violations
+set_app_options -name place.coopt.effort -value high
 
 place_opt
 clock_opt
