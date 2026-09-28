@@ -65,16 +65,16 @@ create_clock -name clk -period 2.0 [get_ports clk]
 compile_fusion -to initial_map
 
 # ==============================================================================
-# 5. Floorplanning with Verified Site Name ('unit')
+# 5. Floorplanning
 # ==============================================================================
 initialize_floorplan -core_utilization 0.65 -shape R -site unit
 
 # ==============================================================================
 # 6. Placement, CTS, and Routing
 # ==============================================================================
-# Allow the placer to automatically fix max_capacitance and transition violations
-set_app_options -name place.coopt.effort -value high
+compile_fusion -to initial_map
 
+# Run placement natively without invalid app options
 place_opt
 clock_opt
 route_auto
