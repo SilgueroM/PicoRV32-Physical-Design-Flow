@@ -1,5 +1,5 @@
 # ==============================================================================
-# PicoRV32 Physical Design Flow - Fusion Compiler (FC) Automation Script
+# PicoRV32 Physical Design Flow - Fusion Compiler (FC) Feasibility Check
 # Target Technology: SkyWater 130nm (sky130_fd_sc_hd)
 # ==============================================================================
 
@@ -7,7 +7,7 @@
 set script_dir [file dirname [file normalize [info script]]]
 set proj_root  [file normalize "$script_dir/.."]
 
-# Local repository technology file
+# Local repository technology file (your committed .tf file)
 set tech_file  "$proj_root/tech/sky130_fd_sc_hd.tf"
 
 # Shared nanoHUB Sky130 PDK library assets
@@ -25,7 +25,7 @@ catch { remove_lib workspace_rv32 }
 # Create design library bound to the Sky130 technology file
 create_lib workspace_rv32 -technology $tech_file
 
-# Ingest standard cell logical timing and physical geometry
+# Ingest standard cell logical timing and physical geometry on the fly
 read_lib $logic_lib
 read_lef $phys_lef
 
@@ -34,7 +34,7 @@ read_verilog "$proj_root/rtl/picorv32.v"
 current_design picorv32
 link
 
-# Clock Constraint (500 MHz / 2.0ns period for Sky130 HD library baseline)
+# Clock Constraint (500 MHz / 2.0ns period to ensure feasible setup closure in Sky130 HD)
 create_clock -name clk -period 2.0 [get_ports clk]
 
 # Execute initial logic synthesis map
@@ -58,6 +58,7 @@ write_verilog -exclude {scalar_wire_declarations leaf_module_declarations} \
 write_parasitics -output "$proj_root/outputs/picorv32.spef"
 write_def "$proj_root/outputs/picorv32.def"
 
+# Save the compiled database and dump reports
 save_block -as picorv32_routed_final
 report_timing > "$proj_root/reports/timing_signoff.rpt"
 report_area   > "$proj_root/reports/area_summary.rpt"
