@@ -7,58 +7,82 @@
 set script_dir [file dirname [file normalize [info script]]]
 set proj_root  [file normalize "$script_dir/.."]
 
-# Local repository technology file (your committed .tf file)
-set tech_file  "$proj_root/tech/sky130_fd_sc_hd.tf"
+# Shared nanoHUB Sky130 PDK library assets (Raw Text Files)
+set sky130_base    "/apps/share64/rocky8/openpdks/openpdk-20241202/share/pdk/sky130A/libs.ref/sky130_fd_sc_hd"
+set logic_lib_raw  "$sky130_base/lib/sky130_fd_sc_hd__tt_025C_1v80.lib"
+set phys_lef       "$sky130_base/lef/sky130_fd_sc_hd.lef"
 
-# Shared nanoHUB Sky130 PDK library assets
-set sky130_base "/apps/share64/rocky8/openpdks/openpdk-20241202/share/pdk/sky130A/libs.ref/sky130_fd_sc_hd"
-set logic_lib   "$sky130_base/lib/sky130_fd_sc_hd__tt_025C_1v80.lib"
-set phys_lef    "$sky130_base/lef/sky130_fd_sc_hd.lef"
+# Local repository technology files (Compiled Binaries & TF)
+set tech_file  "$proj_root/tech/sky130_fd_sc_hd.tf"
+set tech_db    "$proj_root/tech/sky130_fd_sc_hd.db"
+set phys_ndm   "$proj_root/tech/sky130_fd_sc_hd.ndm"
 
 # Ensure output and report directories exist
 file mkdir "$proj_root/outputs"
 file mkdir "$proj_root/reports"
 
-# 2. Database Initialization & Library Binding
+# ==============================================================================
+# 2. Automated Library Compilation (Runs system shells via Tcl 'exec')
+# ==============================================================================
+
+# Compile the ASCII .lib into a Synopsys .db if it doesn't exist yet
+if {![file exists $tech_db]} {
+    puts "=== Compiling .lib to .db using lc_shell ==="
+    exec lc_shell -x "read_lib $logic_lib_raw; write_lib sky130_fd_sc_hd__tt_025C_1v80 -format db -output $tech_db; exit"
+}
+
+# Package the .db, .lef, and .tf into a Fusion Compiler .ndm if it doesn't exist yet
+if {![file exists $phys_ndm]} {
+    puts "=== Packaging .ndm using icc2_lm_shell ==="
+    exec icc2_lm_shell -x "create_workspace sky130_ws -technology $tech_file; read_lef $phys_lef; read_db $tech_db; check_workspace; commit_workspace -output $phys_ndm; exit"
+}
+
+# ==============================================================================
+# 3. Database Initialization & Library Binding
+# ==============================================================================
+set_app_var target_library $tech_db
+set_app_var link_library "* $target_library"
+
 catch { remove_lib workspace_rv32 }
 
-# Create design library bound to the Sky130 technology file
-create_lib workspace_rv32 -technology $tech_file
+# Create design library bound to the tech file AND the physical NDM reference library
+create_lib workspace_rv32 -technology $tech_file -ref_libs $phys_ndm
 
-# Ingest standard cell logical timing and physical geometry on the fly
-read_lib $logic_lib
-read_lef $phys_lef
-
-# 3. Design Read & Synthesis Map
+# ==============================================================================
+# 4. Design Read & Synthesis Map
+# ==============================================================================
 read_verilog "$proj_root/rtl/picorv32.v"
 current_design picorv32
 link
 
-# Clock Constraint (500 MHz / 2.0ns period to ensure feasible setup closure in Sky130 HD)
+# Clock Constraint (500 MHz / 2.0ns period)
 create_clock -name clk -period 2.0 [get_ports clk]
 
 # Execute initial logic synthesis map
 compile_fusion -to initial_map
 
-# 4. Floorplanning & Power Mesh
+# ==============================================================================
+# 5. Floorplanning & Power Mesh
+# ==============================================================================
 initialize_floorplan -core_utilization 0.65 -shape R
 create_power_plan -nets {VDD VSS} -strategy ring_and_stripe
 
-# 5. Placement & Clock Tree Synthesis (CTS)
+# ==============================================================================
+# 6. Placement, CTS, and Routing
+# ==============================================================================
 place_opt
 clock_opt
-
-# 6. Routing & Post-Route Optimization
 route_auto
 route_opt
 
+# ==============================================================================
 # 7. Deliverable Exports & Sign-Off Generation
+# ==============================================================================
 write_verilog -exclude {scalar_wire_declarations leaf_module_declarations} \
   "$proj_root/outputs/picorv32_routed.v"
 write_parasitics -output "$proj_root/outputs/picorv32.spef"
 write_def "$proj_root/outputs/picorv32.def"
 
-# Save the compiled database and dump reports
 save_block -as picorv32_routed_final
 report_timing > "$proj_root/reports/timing_signoff.rpt"
 report_area   > "$proj_root/reports/area_summary.rpt"
