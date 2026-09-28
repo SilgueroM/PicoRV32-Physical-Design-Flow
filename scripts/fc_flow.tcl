@@ -69,6 +69,9 @@ compile_fusion -to initial_map
 # ==============================================================================
 initialize_floorplan -core_utilization 0.65 -shape R
 
+# Explicitly snap standard cells to the core site grid before placement
+set_app_options -name place.coarsen.enable -value false
+
 # ==============================================================================
 # 6. Placement, CTS, and Routing
 # ==============================================================================
