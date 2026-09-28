@@ -65,16 +65,18 @@ create_clock -name clk -period 2.0 [get_ports clk]
 compile_fusion -to initial_map
 
 # ==============================================================================
-# 5. Floorplanning
+# 5. Floorplanning & Site Row Definition
 # ==============================================================================
 initialize_floorplan -core_utilization 0.65 -shape R
 
-# Explicitly snap standard cells to the core site grid before placement
-set_app_options -name place.coarsen.enable -value false
+# Explicitly build and snap core placement site rows so the placer finds them
+create_core_area_rows
 
 # ==============================================================================
 # 6. Placement, CTS, and Routing
 # ==============================================================================
+compile_fusion -to initial_map
+
 place_opt
 clock_opt
 route_auto
