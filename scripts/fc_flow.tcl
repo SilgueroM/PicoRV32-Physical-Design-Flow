@@ -49,10 +49,10 @@ catch { remove_lib workspace_rv32 }
 create_lib workspace_rv32 -technology $tech_file -ref_libs $phys_ndm
 
 # ==============================================================================
-# 4. Design Read & Synthesis Map
+# 4. Design Read & Synthesis Map (Using SystemVerilog analyzer)
 # ==============================================================================
-read_verilog "$proj_root/rtl/picorv32.v"
-current_design picorv32
+analyze -format sverilog "$proj_root/rtl/picorv32.v"
+elaborate picorv32
 link
 
 # Clock Constraint (500 MHz / 2.0ns period)
