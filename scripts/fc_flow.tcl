@@ -67,10 +67,8 @@ compile_fusion -to initial_map
 # ==============================================================================
 # 5. Floorplanning & Site Row Definition
 # ==============================================================================
-initialize_floorplan -core_utilization 0.65 -shape R
-
-# Explicitly build and snap core placement site rows so the placer finds them
-create_core_area_rows
+# Sky130 high-density standard cell site name is typically 'unithd'
+initialize_floorplan -core_utilization 0.65 -shape R -site unithd
 
 # ==============================================================================
 # 6. Placement, CTS, and Routing
