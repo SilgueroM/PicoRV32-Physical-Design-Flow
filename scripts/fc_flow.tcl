@@ -70,14 +70,19 @@ compile_fusion -to initial_map
 # ==============================================================================
 initialize_floorplan -core_utilization 0.65 -shape R
 
-# Use compile_fusion to smoothly handle placement and optimization together
-compile_fusion -to place_opt
+# ==============================================================================
+# 6. Synthesis, Placement, CTS, and Routing
+# ==============================================================================
+# Run initial logic mapping
+compile_fusion -to initial_map
 
-# ==============================================================================
-# 6. Placement, CTS, and Routing
-# ==============================================================================
+# Run placement and optimization
 place_opt
+
+# Clock Tree Synthesis
 clock_opt
+
+# Global and Detailed Routing
 route_auto
 route_opt
 
