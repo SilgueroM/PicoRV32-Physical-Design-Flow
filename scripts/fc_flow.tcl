@@ -65,10 +65,9 @@ create_clock -name clk -period 2.0 [get_ports clk]
 compile_fusion -to initial_map
 
 # ==============================================================================
-# 5. Floorplanning & Site Row Definition
+# 5. Floorplanning with Verified Site Name ('unit')
 # ==============================================================================
-# Sky130 high-density standard cell site name is typically 'unithd'
-initialize_floorplan -core_utilization 0.65 -shape R -site unithd
+initialize_floorplan -core_utilization 0.65 -shape R -site unit
 
 # ==============================================================================
 # 6. Placement, CTS, and Routing
