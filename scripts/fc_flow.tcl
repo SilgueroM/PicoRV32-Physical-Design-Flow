@@ -70,9 +70,6 @@ compile_fusion -to initial_map
 # ==============================================================================
 initialize_floorplan -core_utilization 0.65 -shape R
 
-# Connect global power and ground pins automatically for feasibility
-derive_pg_connection -power_net VDD -ground_net VSS -power_pins {VPWR} -ground_pins {VGND}
-
 # ==============================================================================
 # 6. Placement, CTS, and Routing
 # ==============================================================================
