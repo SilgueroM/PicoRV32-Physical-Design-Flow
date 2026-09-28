@@ -7,15 +7,15 @@
 set script_dir [file dirname [file normalize [info script]]]
 set proj_root  [file normalize "$script_dir/.."]
 
-# Shared nanoHUB Sky130 PDK library assets (Raw Text Files)
-set sky130_base    "/apps/share64/rocky8/openpdks/openpdk-20241202/share/pdk/sky130A/libs.ref/sky130_fd_sc_hd"
-set logic_lib_raw  "$sky130_base/lib/sky130_fd_sc_hd__tt_025C_1v80.lib"
-set phys_lef       "$sky130_base/lef/sky130_fd_sc_hd.lef"
+# Local repository library paths (Strictly using local repository files)
+set sky130_lib_dir "$proj_root/libraries/sky130_fd_sc_hd"
+set logic_lib_raw  "$sky130_lib_dir/sky130_fd_sc_hd__tt_025C_1v80.lib"
+set phys_lef       "$sky130_lib_dir/sky130_fd_sc_hd.lef"
 
-# Local repository technology files (Compiled Binaries & TF)
-set tech_file  "$proj_root/tech/sky130_fd_sc_hd.tf"
-set tech_db    "$proj_root/tech/sky130_fd_sc_hd.db"
-set phys_ndm   "$proj_root/tech/sky130_fd_sc_hd.ndm"
+# Local repository technology files
+set tech_file      "$sky130_lib_dir/sky130_fd_sc_hd.tf"
+set tech_db        "$proj_root/tech/sky130_fd_sc_hd.db"
+set phys_ndm       "$proj_root/tech/sky130_fd_sc_hd.ndm"
 
 # Ensure output and report directories exist
 file mkdir "$proj_root/outputs"
