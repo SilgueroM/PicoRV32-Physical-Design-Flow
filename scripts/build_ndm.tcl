@@ -12,12 +12,12 @@ set tech_lef  "$proj_root/libraries/NanGate45/NanGate45/lef/NangateOpenCellLibra
 set macro_lef "$proj_root/libraries/NanGate45/NanGate45/lef/NangateOpenCellLibrary.macro.mod.lef"
 set phys_ndm  "$proj_root/work/NangateOpenCellLibrary.ndm"
 
-# 1. Clean previous build
+# 1. Clean workspace directory
 puts "INFO: Cleaning previous workspace and work directory..."
 file delete -force "$proj_root/work"
 file mkdir "$proj_root/work"
 
-# 2. Pre-flight check
+# 2. Pre-flight file check
 foreach file [list $tech_tf $tech_db $tech_lef $macro_lef] {
     if {![file exists $file]} {
         puts "ERROR: Missing required library file -> $file"
@@ -25,22 +25,27 @@ foreach file [list $tech_tf $tech_db $tech_lef $macro_lef] {
     }
 }
 
-# 3. Create Workspace
+# 3. Create Workspace and set tolerance options
 puts "INFO: Creating workspace using NanGate technology file..."
 create_workspace nangate_ws -technology $tech_tf
 
-# 4. Set Exact App Options Found in Diagnostic Dump
 set_app_options -name lib.workspace.allow_commit_workspace_overwrite -value true
 set_app_options -name lib.workspace.library_developer_mode -value true
 set_app_options -name lib.workspace.allow_missing_related_pg_pins -value true
 
-puts "INFO: Reading physical (LEF) and logical (.db) libraries..."
+puts "INFO: Reading LEF and DB files..."
 read_lef $tech_lef
 read_lef $macro_lef
 read_db $tech_db
 
-puts "INFO: Checking workspace..."
-catch {check_workspace}
+# 4. REMOVE GHOST CELLS (Fixes LM-012 / LM-035)
+puts "INFO: Purging physical-less LOGIC0/LOGIC1 cells from memory..."
+catch {remove_lib_cells [get_lib_cells nangate_ws/LOGIC0]}
+catch {remove_lib_cells [get_lib_cells nangate_ws/LOGIC1]}
+
+# 5. Check and Commit
+puts "INFO: Running workspace check..."
+check_workspace
 
 puts "INFO: Committing workspace to NDM database..."
 if {[catch {commit_workspace -output $phys_ndm} err_commit]} {
