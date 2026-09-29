@@ -65,20 +65,47 @@ create_clock -name clk -period 2.0 [get_ports clk]
 compile_fusion -to initial_map
 
 # ==============================================================================
-# 5. Floorplanning
+# 5 & 6. Floorplan & Placement with Strict Debug Logging
 # ==============================================================================
-initialize_floorplan -core_utilization 0.65 -shape R -site unit
+puts "=== RUNNING FLOORPLAN AND PLACEMENT WITH DEBUG ==="
+file mkdir "$proj_root/reports"
+set debug_log [open "$proj_root/reports/quick_debug.log" w]
 
-# ==============================================================================
-# 6. Placement, CTS, and Routing
-# ==============================================================================
-compile_fusion -to initial_map
+# 1. Floorplan Step (Sky130 HD uses 'unithd', not 'unit')
+puts $debug_log "--- 1. INITIALIZE FLOORPLAN ---"
+if {[catch {initialize_floorplan -control_box {0 0 100 100} -core_offset {10 10 10 10} -site unithd} err_fp]} {
+    puts $debug_log "FAILED: $err_fp"
+} else {
+    puts $debug_log "SUCCESS: Floorplan created."
+}
 
-# Run placement natively without invalid blockage syntax
-place_opt
-clock_opt
-route_auto
-route_opt
+# 2. Check standard cell rows (Crucial to see if the grid actually built)
+puts $debug_log "\n--- 2. PLACEMENT ROWS GENERATED ---"
+if {[catch {redirect -variable row_rep {report_site_row}}]} {
+    puts $debug_log "WARNING: report_site_row command failed. No rows exist?"
+} else {
+    puts $debug_log $row_rep
+}
+
+# 3. Place Opt Step
+puts $debug_log "\n--- 3. PLACE_OPT ---"
+if {[catch {place_opt} err_place]} {
+    global errorInfo
+    puts $debug_log "FAILED: place_opt crashed."
+    puts $debug_log "ERROR MESSAGE: $err_place"
+    puts $debug_log "EXTENDED TRACE:\n$errorInfo"
+} else {
+    puts $debug_log "SUCCESS: place_opt finished!"
+    
+    # If it survives placement, try to finish the flow
+    clock_opt
+    route_auto
+    write_verilog -output "$proj_root/outputs/picorv32_routed.v"
+}
+
+close $debug_log
+puts "=== DEBUG LOG SAVED TO reports/quick_debug.log ==="
+exit
 
 # ==============================================================================
 # 7. Deliverable Exports & Sign-Off Generation
