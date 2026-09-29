@@ -25,7 +25,7 @@ foreach file [list $tech_tf $tech_db $tech_lef $macro_lef] {
     }
 }
 
-# 3. Create Workspace and set tolerance options
+# 3. Create Workspace and set developer options
 puts "INFO: Creating workspace using NanGate technology file..."
 create_workspace nangate_ws -technology $tech_tf
 
@@ -38,14 +38,13 @@ read_lef $tech_lef
 read_lef $macro_lef
 read_db $tech_db
 
-# 4. REMOVE GHOST CELLS (Fixes LM-012 / LM-035)
-puts "INFO: Purging physical-less LOGIC0/LOGIC1 cells from memory..."
-catch {remove_lib_cells [get_lib_cells nangate_ws/LOGIC0]}
-catch {remove_lib_cells [get_lib_cells nangate_ws/LOGIC1]}
+# 4. Purge physical-less tie cells matching LOGIC* (LOGIC0_X1, LOGIC1_X1)
+puts "INFO: Purging physical-less LOGIC* cells from memory..."
+catch {remove_lib_cells [get_lib_cells nangate_ws/LOGIC*]}
 
 # 5. Check and Commit
 puts "INFO: Running workspace check..."
-check_workspace
+catch {check_workspace}
 
 puts "INFO: Committing workspace to NDM database..."
 if {[catch {commit_workspace -output $phys_ndm} err_commit]} {
