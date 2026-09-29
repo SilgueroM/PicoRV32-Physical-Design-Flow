@@ -1,4 +1,3 @@
-cat << 'EOF' > scripts/fc_flow.tcl
 # ==============================================================================
 # PicoRV32 Physical Design Flow - FreePDK45 (Fusion Compiler)
 # ==============================================================================
@@ -45,4 +44,3 @@ report_timing > "$proj_root/reports/signoff_timing.rpt"
 
 puts "INFO: Full physical design flow finished successfully!"
 exit
-EOF
