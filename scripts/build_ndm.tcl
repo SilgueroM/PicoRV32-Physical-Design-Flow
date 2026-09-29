@@ -1,34 +1,30 @@
 # ==============================================================================
-# NanGate45 NDM Library Compilation Script (Forced Override Mode)
+# FreePDK3 NDM Compilation Script (icc2_lm_shell)
 # ==============================================================================
+puts "INFO: Starting FreePDK3 NDM compilation..."
+
 set script_dir [file dirname [file normalize [info script]]]
 set proj_root  [file normalize "$script_dir/.."]
 
-set tech_tf   "$proj_root/libraries/NanGate45/NanGate45/tf/NangateOpenCellLibrary.tf"
-set tech_db   "$proj_root/libraries/NanGate45/NanGate45/db/NangateOpenCellLibrary_typical.db"
-set tech_lef  "$proj_root/libraries/NanGate45/NanGate45/lef/NangateOpenCellLibrary.tech.lef"
-set macro_lef "$proj_root/libraries/NanGate45/NanGate45/lef/NangateOpenCellLibrary.macro.mod.lef"
-set phys_ndm  "$proj_root/work/NangateOpenCellLibrary.ndm"
+# Exact path to the FreePDK3 tech file from your repository tree
+set tech_tf   "$proj_root/libraries/FreePDK3/syncust/techfiles/NCSU_TechLib_FreePDK3_CC.tf"
+set work_dir  "$proj_root/work"
+set phys_ndm  "$proj_root/work/FreePDK3.ndm"
 
-# Clean work dir
-file delete -force "$proj_root/work"
-file mkdir "$proj_root/work"
+# 1. Clean and recreate the working directory
+file delete -force $work_dir
+file mkdir $work_dir
 
-puts "INFO: Creating workspace..."
-create_workspace nangate_ws -technology $tech_tf
+# 2. Create the NDM workspace using the tech file
+puts "INFO: Creating workspace with technology file..."
+create_workspace freepdk3_ws -technology $tech_tf
 
-# Enable developer mode to override open-source library structural checks
-set_app_options -name lib.workspace.library_developer_mode -value true
-set_app_options -name lib.workspace.allow_commit_workspace_overwrite -value true
+# 3. Commit the workspace to output the compiled .ndm database
+puts "INFO: Committing workspace to generate NDM..."
+if {[catch {commit_workspace -output $phys_ndm} err]} {
+    puts "ERROR: Failed to commit NDM workspace:\n$err"
+    exit 1
+}
 
-puts "INFO: Reading LEFs and DB..."
-read_lef $tech_lef
-read_lef $macro_lef
-read_db $tech_db
-
-puts "INFO: Forcing commit to NDM..."
-# Skip check_workspace entirely and force commit directly
-commit_workspace -force -output $phys_ndm
-
-puts "INFO: NDM successfully built at $phys_ndm"
+puts "INFO: SUCCESS! Compiled NDM generated at: $phys_ndm"
 exit
