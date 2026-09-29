@@ -1,124 +1,130 @@
 # ==============================================================================
-# PicoRV32 Physical Design Flow - Fusion Compiler (FC) Feasibility Check
-# Target Technology: SkyWater 130nm (sky130_fd_sc_hd)
+# PicoRV32 Physical Design Flow - NanGate45 "Bulletproof" Script
 # ==============================================================================
+puts "=== [DEBUG] Starting Bulletproof FC Run ==="
 
-# 1. Environment & Path Resolution
+# 1. Environment Setup
 set script_dir [file dirname [file normalize [info script]]]
 set proj_root  [file normalize "$script_dir/.."]
 
-# Local repository library paths (Strictly using local repository files)
-set sky130_lib_dir "$proj_root/libraries/sky130_fd_sc_hd"
-set logic_lib_raw  "$sky130_lib_dir/sky130_fd_sc_hd__tt_025C_1v80.lib"
-set phys_lef       "$sky130_lib_dir/sky130_fd_sc_hd.lef"
-
-# Local repository technology files
-set tech_file      "$sky130_lib_dir/sky130_fd_sc_hd.tf"
-set tech_db        "$proj_root/tech/sky130_fd_sc_hd.db"
-set phys_ndm       "$proj_root/tech/sky130_fd_sc_hd.ndm"
-
-# Ensure output and report directories exist
 file mkdir "$proj_root/outputs"
 file mkdir "$proj_root/reports"
+file mkdir "$proj_root/work"
 
-# ==============================================================================
-# 2. Automated Library Compilation (Runs system shells via Tcl 'exec')
-# ==============================================================================
+# Open our custom debug log
+set debug_log [open "$proj_root/reports/cracked_debug.log" w]
+puts $debug_log "=== PICO RV32 CRACKED DEBUG LOG ==="
 
-# Compile the ASCII .lib into a Synopsys .db if it doesn't exist yet
-if {![file exists $tech_db]} {
-    puts "=== Compiling .lib to .db using lc_shell ==="
-    exec lc_shell -x "read_lib $logic_lib_raw; write_lib sky130_fd_sc_hd__tt_025C_1v80 -format db -output $tech_db; exit"
+# 2. Exact Paths (Based flawlessly on your VS Code Screenshots)
+set tech_tf   "$proj_root/libraries/NanGate45/NanGate45/tf/NangateOpenCellLibrary.tf"
+set tech_db   "$proj_root/libraries/NanGate45/NanGate45/db/NangateOpenCellLibrary_typical.db"
+set tech_lef  "$proj_root/libraries/NanGate45/NanGate45/lef/NangateOpenCellLibrary.tech.lef"
+set macro_lef "$proj_root/libraries/NanGate45/NanGate45/lef/NangateOpenCellLibrary.macro.mod.lef"
+set phys_ndm  "$proj_root/work/NangateOpenCellLibrary.ndm"
+set rtl_file  "$proj_root/rtl/picorv32.v"
+
+# 3. Pre-Flight File Checks (Zero Tolerance for Missing Files)
+puts "=== [DEBUG] Verifying Library Files Exist ==="
+foreach file [list $tech_tf $tech_db $tech_lef $macro_lef $rtl_file] {
+    if {![file exists $file]} {
+        set err_msg "CRITICAL ERROR: Cannot find file -> $file"
+        puts $err_msg
+        puts $debug_log $err_msg
+        close $debug_log
+        exit
+    }
 }
+puts "=== [DEBUG] All files verified. ==="
 
-# Package the .db, .lef, and .tf into a Fusion Compiler .ndm if it doesn't exist yet
+# 4. Automated NDM Compilation (Builds physical library if it doesn't exist)
 if {![file exists $phys_ndm]} {
-    puts "=== Packaging .ndm using icc2_lm_shell ==="
-    exec icc2_lm_shell -x "create_workspace sky130_ws -technology $tech_file; read_lef $phys_lef; read_db $tech_db; check_workspace; commit_workspace -output $phys_ndm; exit"
+    puts "=== [DEBUG] NDM missing. Packaging via icc2_lm_shell... ==="
+    
+    # Write a quick script for the library manager
+    set lm_script [open "$proj_root/work/build_ndm.tcl" w]
+    puts $lm_script "create_workspace nangate_ws -technology $tech_tf"
+    puts $lm_script "read_lef $tech_lef"
+    puts $lm_script "read_lef $macro_lef"
+    puts $lm_script "read_db $tech_db"
+    puts $lm_script "check_workspace"
+    puts $lm_script "commit_workspace -output $phys_ndm"
+    puts $lm_script "exit"
+    close $lm_script
+    
+    # Execute the library manager in the background
+    if {[catch {exec icc2_lm_shell -f "$proj_root/work/build_ndm.tcl"} lm_err]} {
+        puts "CRITICAL ERROR: NDM generation failed. Check debug log."
+        puts $debug_log "NDM GEN ERROR:\n$lm_err"
+        close $debug_log
+        exit
+    }
+    puts "=== [DEBUG] NDM physical database successfully generated! ==="
 }
 
-# ==============================================================================
-# 3. Database Initialization & Library Binding
-# ==============================================================================
+# 5. Tool Setup & Database Binding
 set_app_var target_library $tech_db
 set_app_var link_library "* $target_library"
 
 catch { remove_lib workspace_rv32 }
+if {[catch {create_lib workspace_rv32 -technology $tech_tf -ref_libs $phys_ndm} err_lib]} {
+    puts "CRITICAL ERROR: Failed to create FC workspace. Check debug log."
+    puts $debug_log "WORKSPACE ERROR:\n$err_lib"
+    exit
+}
 
-# Create design library bound to the tech file AND the physical NDM reference library
-create_lib workspace_rv32 -technology $tech_file -ref_libs $phys_ndm
-
-# ==============================================================================
-# 4. Design Read, Elaborate & Map
-# ==============================================================================
-analyze -format sverilog "$proj_root/rtl/picorv32.v"
+# 6. Read RTL & Synthesize
+puts "=== [DEBUG] Elaborating & Synthesizing RTL ==="
+analyze -format sverilog $rtl_file
 elaborate picorv32
 link
-
 current_design picorv32
-set_top_module picorv32
 
-# 2.0ns Clock Constraint (500 MHz)
 create_clock -name clk -period 2.0 [get_ports clk]
-
-# Map RTL to technology logic gates before placement
 compile_fusion -to initial_map
 
-# ==============================================================================
-# 5 & 6. Floorplan & Placement with Strict Debug Logging
-# ==============================================================================
-puts "=== RUNNING FLOORPLAN AND PLACEMENT WITH DEBUG ==="
-file mkdir "$proj_root/reports"
-set debug_log [open "$proj_root/reports/quick_debug.log" w]
-
-# 1. Floorplan Step (Sky130 HD uses 'unithd', not 'unit')
-puts $debug_log "--- 1. INITIALIZE FLOORPLAN ---"
-if {[catch {initialize_floorplan -control_box {0 0 100 100} -core_offset {10 10 10 10} -site unithd} err_fp]} {
-    puts $debug_log "FAILED: $err_fp"
-} else {
-    puts $debug_log "SUCCESS: Floorplan created."
+# 7. Floorplan & Placement Track Verification
+puts "=== [DEBUG] Floorplanning ==="
+if {[catch {initialize_floorplan -core_utilization 0.7 -shape R} err_fp]} {
+    puts "FLOORPLAN CRASHED. Check debug log."
+    puts $debug_log "FLOORPLAN ERROR:\n$err_fp"
+    exit
 }
 
-# 2. Check standard cell rows (Crucial to see if the grid actually built)
-puts $debug_log "\n--- 2. PLACEMENT ROWS GENERATED ---"
-if {[catch {redirect -variable row_rep {report_site_row}}]} {
-    puts $debug_log "WARNING: report_site_row command failed. No rows exist?"
-} else {
-    puts $debug_log $row_rep
+# Trap the row report to ensure we have physical placement tracks!
+redirect -variable row_rep {report_site_row}
+puts "=== [DEBUG] Site Row Status: ==="
+puts $row_rep
+puts $debug_log "SITE ROW STATUS:\n$row_rep"
+
+if {[string match "*No site rows*" $row_rep]} {
+    puts "CRITICAL ERROR: Floorplan drew 0 rows. Place_opt will crash. Exiting safely."
+    exit
 }
 
-# 3. Place Opt Step
-puts $debug_log "\n--- 3. PLACE_OPT ---"
+# 8. Placement & Routing
+puts "=== [DEBUG] Running Placement ==="
 if {[catch {place_opt} err_place]} {
     global errorInfo
-    puts $debug_log "FAILED: place_opt crashed."
-    puts $debug_log "ERROR MESSAGE: $err_place"
-    puts $debug_log "EXTENDED TRACE:\n$errorInfo"
-} else {
-    puts $debug_log "SUCCESS: place_opt finished!"
-    
-    # If it survives placement, try to finish the flow
-    clock_opt
-    route_auto
-    write_verilog -output "$proj_root/outputs/picorv32_routed.v"
+    puts "PLACEMENT CRASHED. Check debug log."
+    puts $debug_log "PLACEMENT ERROR:\n$err_place\n$errorInfo"
+    exit
 }
 
-close $debug_log
-puts "=== DEBUG LOG SAVED TO reports/quick_debug.log ==="
-exit
+puts "=== [DEBUG] Running CTS and Routing ==="
+clock_opt
+route_auto
+route_opt
 
-# ==============================================================================
-# 7. Deliverable Exports & Sign-Off Generation
-# ==============================================================================
-write_verilog -exclude {scalar_wire_declarations leaf_module_declarations} \
-  "$proj_root/outputs/picorv32_routed.v"
+# 9. Deliverables Export
+puts "=== [DEBUG] Exporting Sign-off Deliverables ==="
+write_verilog -output "$proj_root/outputs/picorv32_routed.v"
 write_parasitics -output "$proj_root/outputs/picorv32.spef"
-write_def "$proj_root/outputs/picorv32.def"
+write_def -output "$proj_root/outputs/picorv32.def"
 
-save_block -as picorv32_routed_final
 report_timing > "$proj_root/reports/timing_signoff.rpt"
 report_area   > "$proj_root/reports/area_summary.rpt"
 report_power  > "$proj_root/reports/power_summary.rpt"
 
-puts "=== Fusion Compiler Flow Completed Successfully ==="
+puts "=== [SUCCESS] CRACKED FLOW FINISHED FLAWLESSLY ==="
+close $debug_log
 exit
