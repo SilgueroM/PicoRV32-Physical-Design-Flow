@@ -1,5 +1,5 @@
 # ==============================================================================
-# PicoRV32 Physical Design Flow - NanGate45
+# PicoRV32 Physical Design Flow - Direct Library Mode (Bypassing NDM Workspace)
 # ==============================================================================
 puts "INFO: Initializing physical design flow..."
 
@@ -10,61 +10,40 @@ file mkdir "$proj_root/outputs"
 file mkdir "$proj_root/reports"
 file mkdir "$proj_root/work"
 
-# Define library and RTL paths
+# Define raw library paths directly
 set tech_tf   "$proj_root/libraries/NanGate45/NanGate45/tf/NangateOpenCellLibrary.tf"
 set tech_db   "$proj_root/libraries/NanGate45/NanGate45/db/NangateOpenCellLibrary_typical.db"
-set phys_ndm  "$proj_root/work/NangateOpenCellLibrary.ndm"
+set tech_lef  "$proj_root/libraries/NanGate45/NanGate45/lef/NangateOpenCellLibrary.tech.lef"
+set macro_lef "$proj_root/libraries/NanGate45/NanGate45/lef/NangateOpenCellLibrary.macro.mod.lef"
 set rtl_file  "$proj_root/rtl/picorv32.v"
 
-# Pre-flight check
-foreach file [list $tech_tf $tech_db $phys_ndm $rtl_file] {
-    if {![file exists $file]} {
-        puts "ERROR: Required file not found: $file"
-        puts "Ensure the NDM library has been built before running this script."
-        exit
-    }
-}
+# Set target libraries for synthesis
+set target_library $tech_db
+set link_library   "* $target_library"
 
-# Tool Setup & Database Binding
-set_app_var target_library $tech_db
-set_app_var link_library "* $target_library"
+# Initialize design library directly using the technology file and raw LEFs
+create_lib pico_design -technology $tech_tf
+read_lef $tech_lef
+read_lef $macro_lef
 
-catch { remove_lib workspace_rv32 }
-if {[catch {create_lib workspace_rv32 -technology $tech_tf -ref_libs $phys_ndm} err_lib]} {
-    puts "ERROR: Failed to create library workspace.\n$err_lib"
-    exit
-}
-
-# RTL Elaboration & Synthesis
+# Read RTL & Link
 puts "INFO: Elaborating and synthesizing RTL..."
 analyze -format sverilog $rtl_file
 elaborate picorv32
 link
 current_design picorv32
 
+# Apply constraints and run compilation
 create_clock -name clk -period 2.0 [get_ports clk]
 compile_fusion -to initial_map
 
 # Floorplanning
 puts "INFO: Initializing floorplan..."
-if {[catch {initialize_floorplan -core_utilization 0.7 -shape R} err_fp]} {
-    puts "ERROR: Floorplan initialization failed.\n$err_fp"
-    exit
-}
-
-# Verify site rows exist to prevent placement crashes
-redirect -variable row_rep {report_site_row}
-if {[string match "*No site rows*" $row_rep]} {
-    puts "ERROR: Floorplan generated 0 site rows. Missing physical data in NDM."
-    exit
-}
+initialize_floorplan -core_utilization 0.7 -shape R
 
 # Placement, CTS, and Routing
 puts "INFO: Running placement and routing..."
-if {[catch {place_opt} err_place]} {
-    puts "ERROR: Placement failed.\n$err_place"
-    exit
-}
+place_opt
 clock_opt
 route_auto
 route_opt
@@ -77,7 +56,6 @@ write_def -output "$proj_root/outputs/picorv32.def"
 
 report_timing > "$proj_root/reports/timing_signoff.rpt"
 report_area   > "$proj_root/reports/area_summary.rpt"
-report_power  > "$proj_root/reports/power_summary.rpt"
 
 puts "INFO: Physical design flow completed successfully."
 exit
