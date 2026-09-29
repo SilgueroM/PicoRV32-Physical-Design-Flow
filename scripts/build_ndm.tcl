@@ -4,7 +4,6 @@
 set script_dir [file dirname [file normalize [info script]]]
 set proj_root  [file normalize "$script_dir/.."]
 
-# Absolute paths pointing strictly to the submodule structure
 set tech_tf   "$proj_root/libraries/NanGate45/NanGate45/tf/NangateOpenCellLibrary.tf"
 set tech_db   "$proj_root/libraries/NanGate45/NanGate45/db/NangateOpenCellLibrary_typical.db"
 set tech_lef  "$proj_root/libraries/NanGate45/NanGate45/lef/NangateOpenCellLibrary.tech.lef"
@@ -22,9 +21,6 @@ read_lef $macro_lef
 
 puts "INFO: Reading standard cell database (.db)..."
 read_db $tech_db
-
-# Allow flexibility for open-source library pin/cell discrepancies
-set_app_options -name shell.common.allow_missing_physical_cells -value true
 
 puts "INFO: Checking and committing workspace to NDM..."
 check_workspace
