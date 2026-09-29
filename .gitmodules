@@ -1,3 +1,6 @@
 [submodule "libraries/FreePDK3"]
 	path = libraries/FreePDK3
 	url = https://github.com/ncsu-eda/FreePDK3.git
+[submodule "libraries/FreePDK45"]
+	path = libraries/FreePDK45
+	url = https://github.com/baichen318/FreePDK45.git
