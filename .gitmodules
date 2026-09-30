@@ -1,3 +1,6 @@
 [submodule "libraries/FreePDK45"]
 	path = libraries/FreePDK45
 	url = https://github.com/baichen318/FreePDK45.git
+[submodule "libraries/NanGate45-Synopsys-Enablement"]
+	path = libraries/NanGate45-Synopsys-Enablement
+	url = https://github.com/ABKGroup/NanGate45-Synopsys-Enablement.git
