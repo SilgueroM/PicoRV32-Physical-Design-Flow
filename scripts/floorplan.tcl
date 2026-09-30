@@ -34,12 +34,13 @@ link
 read_sdc design/constraints.sdc
 
 # --- 4. Initialize Floorplan ---
-# Target: Aspect ratio 1.0 (Square), 60% core utilization, and a 10um margin 
+# Target: Square shape (1:1 ratio), 60% core utilization, and a 10um margin 
 # on all 4 sides between the core standard cells and the die boundary.
-initialize_floorplan -control_type aspect_ratio \
-                     -core_aspect_ratio 1.0 \
+initialize_floorplan -control_type core \
+                     -shape R \
+                     -side_ratio {1.0 1.0} \
                      -core_utilization 0.6 \
-                     -boundary_offset {10 10 10 10}
+                     -core_offset {10 10 10 10}
 
 # --- 5. Power Grid Synthesis (PDN) ---
 # Define global logical power and ground nets
