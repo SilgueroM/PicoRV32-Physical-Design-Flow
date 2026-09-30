@@ -1,24 +1,56 @@
-# PicoRV32 RISC-V: RTL-to-GDSII Physical Design Flow
+# PicoRV32 Physical Design Flow: RTL-to-GDSII
 
-This repository houses a complete backend ASIC physical design pipeline for the PicoRV32, a popular open-source 32-bit RISC-V CPU core. Instead of focusing on frontend logic design, this project dives straight into physical implementation. It uses custom Tcl automation to drive the RISC-V architecture through synthesis, floorplanning, placement, routing, and timing sign-off using the Synopsys EDA toolchain.
+## 📌 Project Overview
+This repository demonstrates a complete, automated Application-Specific Integrated Circuit (ASIC) physical design pipeline. It focuses entirely on backend implementation, taking the industry-standard PicoRV32 RISC-V core from raw Verilog RTL all the way to a fully routed physical layout. 
 
-## The Toolchain
-*   **Synopsys Fusion Compiler:** Unified logic synthesis, floorplanning, power mesh planning, standard cell placement, Clock Tree Synthesis (CTS), and routing.
-*   **Synopsys StarRC:** Sign-off RC parasitic extraction from the routed database.
-*   **Synopsys PrimeTime:** Static Timing Analysis (STA) to evaluate critical paths and verify setup/hold timing closure.
-*   **Synopsys Formality:** Logic Equivalence Checking (LEC) to prove the routed netlist matches the golden RTL.
+The primary purpose of this project is to apply advanced VLSI methodologies—including power grid formulation, timing-aware placement, and rigorous static timing analysis—while evaluating Power, Performance, and Area (PPA) metrics using the **NanGate 45nm open-source PDK**.
 
-## Directory Structure
-*   `/rtl` - The golden `picorv32.v` Verilog source file.
-*   `/scripts` - The Tcl automation scripts for `fc_shell`, `pt_shell`, and `fm_shell`.
-*   `/docs` - The compiled PDF lab manual and LaTeX source detailing the environment setup, execution commands, and PD methodology.
-*   `/outputs` - Generated netlists, SPEF, SDC, and DEF files (ignored via `.gitignore`).
-*   `/reports` - Timing, power, and area reports (ignored via `.gitignore`).
+## 🔬 The Core: PicoRV32
+The PicoRV32 is a popular, size-optimized 32-bit RISC-V CPU core that implements the RV32IMC instruction set. Because it is written in standard, generic Verilog and has a highly configurable architecture, it serves as an excellent benchmark design for driving complex EDA toolchains, testing high-frequency clock constraints, and analyzing standard cell density and routing congestion.
 
-## Quick Start
-Check out the `docs/main.pdf` manual for detailed environment setup and standard cell library routing. To run the main implementation flow:
+## ⚙️ Technology & Enablement
+* **Target Node:** 45nm (NanGate Open Cell Library)
+* **Libraries Integrated:** 
+  * `Liberty (.db)` for logical timing/power
+  * `LEF` for physical standard cell/macro definitions
+  * `TLU+` for RC parasitic extraction
+  * `SDC` for clock and I/O timing constraints (Targeting 500 MHz)
 
-1. Update your `$tech_lib` and `$phys_lib` paths in `scripts/fc_flow.tcl` to match your local SAED32 PDK installation.
-2. Run Fusion Compiler in batch mode:
+---
+
+## 🛠️ Synopsys Toolchain & Automation Scripts
+This flow is heavily automated using custom Tcl scripts designed specifically for the Synopsys digital implementation suite.
+
+### 1. Synopsys Fusion Compiler (`fc_shell`)
+Acts as the unified engine for logic synthesis and physical implementation. 
+* **Synthesis:** Translates generic RTL logic into mapped NanGate45 standard cells.
+* **Floorplanning:** Defines core dimensions, places I/O pins, and builds the macro VDD/VSS power mesh.
+* **Placement & Optimization:** Executes timing-driven standard cell placement to resolve design rule violations and layout congestion.
+* **Associated Scripts:** 
+  * `scripts/setup.tcl` - Initializes the tool environment, links `.db` logical libraries, `.lef` physical libraries, and loads `TLU+` parasitic models.
+  * `scripts/place.tcl` - The main execution script that drives `compile_fusion`, applies the `constraints.sdc`, and runs `place_opt`.
+
+### 2. Synopsys StarRC
+Used for sign-off physical extraction.
+* Extracts highly accurate Resistance and Capacitance (RC) network data from the fully routed Fusion Compiler database.
+* Generates the SPEF (Standard Parasitic Exchange Format) file required for final timing analysis.
+
+### 3. Synopsys PrimeTime (`pt_shell`)
+The industry-standard sign-off Static Timing Analysis (STA) tool.
+* Reads the synthesized netlist and the StarRC-extracted SPEF.
+* Rigorously evaluates all critical timing paths to ensure zero setup or hold violations across the design.
+* **Associated Scripts:** 
+  * `scripts/pt_signoff.tcl` (or equivalent) - Loads the netlist and parasitics, generates critical path reports, and performs timing closure verification.
+
+---
+
+## 🚀 Quick Start
+To run the automated Fusion Compiler flow:
+
+1. Ensure your environment has access to the Synopsys toolchain (`fc_shell`).
+2. Clone this repository and verify your local PDK paths inside `scripts/setup.tcl`.
+3. Launch the placement and optimization flow in batch mode:
    ```bash
-   fc_shell -f scripts/fc_flow.tcl
+   fc_shell -f scripts/place.tcl
+   ```
+4. Review the generated terminal output and log files for Synthesis mapping and `place_opt` QOR (Quality of Results).
