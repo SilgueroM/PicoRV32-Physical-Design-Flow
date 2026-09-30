@@ -11,14 +11,23 @@ open_lib work/picorv32_lib.ndm
 open_block picorv32_floorplan
 
 # --- 3. Ensure Design Context & Constraints Are Active ---
-# Re-analyze/elaborate or link the loaded block to ensure top module and SDC are bound
 set_top_module picorv32
 link
 read_sdc design/constraints.sdc
 
-# --- 4. Placement & Timing Optimization ---
+# --- 4. Logic Synthesis ---
+# Map the generic RTL to actual NanGate45 physical standard cells
+# We stop at 'logic_opt' so it doesn't try to auto-place yet.
+compile_fusion -to logic_opt
+
+# --- 5. Reconnect Power & Ground ---
+# The newly synthesized gates need their power pins hooked to the floorplan grid
+connect_pg_net -net VDD [get_pins -hierarchical "*/VDD"]
+connect_pg_net -net VSS [get_pins -hierarchical "*/VSS"]
+
+# --- 6. Placement & Timing Optimization ---
 place_opt
 
-# --- 5. Save Database ---
+# --- 7. Save Database ---
 save_block -as picorv32_placed
-puts "\[INFO\] Placement and optimization complete! Database saved to picorv32_lib.ndm:picorv32_placed"
+puts "\[INFO\] Placement and optimization complete! Database saved."
