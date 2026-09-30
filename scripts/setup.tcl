@@ -27,11 +27,12 @@ set_app_var link_library   "* NangateOpenCellLibrary_typical.db"
 set TECH_FILE      "${DESIGN_REF_PATH}/tf/NangateOpenCellLibrary.tf"
 
 # Physical LEF files (Both macro and tech LEFs are required)
+# Physical LEF files (Both macro and tech LEFs are required)
 set LEF_FILES      [list \
                      "${DESIGN_REF_PATH}/lef/NangateOpenCellLibrary.tech.lef" \
-                     "${DESIGN_REF_PATH}/lef/NangateOpenCellLibrary.macro.lef" \
+                     "${DESIGN_REF_PATH}/lef/NangateOpenCellLibrary.macro.mod.lef" \
                    ]
-
+                   
 # --- 5. Parasitic Extraction Files (TLU+) ---
 # Map file and TLU+ tables for RC extraction in Fusion Compiler
 set MAP_FILE       "${DESIGN_REF_PATH}/tlup/nangate_45nm.map"
