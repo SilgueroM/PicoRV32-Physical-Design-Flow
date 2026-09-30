@@ -20,14 +20,17 @@ create_lib $NDM_LIB -technology $TECH_FILE -ref_libs "$LEF_FILES"
 open_lib $NDM_LIB
 
 # --- 3. Read RTL & Constraints ---
-# Analyze and elaborate the RTL source instead of using read_verilog
+# Analyze and elaborate the RTL source
 analyze -format verilog design/picorv32.v
 elaborate picorv32
 
-# Link the logical instances to the NanGate45 .db physical cells
+# Set active top module so linking and SDC apply to picorv32
+current_design picorv32
+
+# Link logical instances to physical libraries
 link
 
-# Apply the timing constraints
+# Apply timing constraints
 read_sdc design/constraints.sdc
 
 # --- 4. Initialize Floorplan ---
