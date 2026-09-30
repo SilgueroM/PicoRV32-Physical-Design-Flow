@@ -20,8 +20,9 @@ create_lib $NDM_LIB -technology $TECH_FILE -ref_libs "$LEF_FILES"
 open_lib $NDM_LIB
 
 # --- 3. Read RTL & Constraints ---
-# Read the Verilog source
-read_verilog design/picorv32.v
+# Analyze and elaborate the RTL source instead of using read_verilog
+analyze -format verilog design/picorv32.v
+elaborate picorv32
 
 # Link the logical instances to the NanGate45 .db physical cells
 link
