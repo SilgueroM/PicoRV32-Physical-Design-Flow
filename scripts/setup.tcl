@@ -23,8 +23,14 @@ set_app_var target_library "NangateOpenCellLibrary_typical.db"
 set_app_var link_library   "* NangateOpenCellLibrary_typical.db"
 
 # --- 4. Physical Technology & LEF Libraries ---
-# Technology File (.tf) for metal layers, vias, and design rules
-set TECH_FILE "${DESIGN_REF_PATH}/tf/NangateOpenCellLibrary.tf"
+# Technology File (.tf)
+set TECH_FILE      "${DESIGN_REF_PATH}/tf/NangateOpenCellLibrary.tf"
+
+# Physical LEF files (Both macro and tech LEFs are required)
+set LEF_FILES      [list \
+                     "${DESIGN_REF_PATH}/lef/NangateOpenCellLibrary.tech.lef" \
+                     "${DESIGN_REF_PATH}/lef/NangateOpenCellLibrary.macro.lef" \
+                   ]
 
 # Physical LEF files for macro/cell boundaries and pin geometry
 set LEF_FILES      "${DESIGN_REF_PATH}/lef/NangateOpenCellLibrary.lef"
