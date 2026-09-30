@@ -24,8 +24,8 @@ open_lib $NDM_LIB
 analyze -format verilog design/picorv32.v
 elaborate picorv32
 
-# Set active top module so linking and SDC apply to picorv32
-current_design picorv32
+# Explicitly set the top module for Fusion Compiler
+set_top_module picorv32
 
 # Link logical instances to physical libraries
 link
