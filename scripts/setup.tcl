@@ -32,9 +32,6 @@ set LEF_FILES      [list \
                      "${DESIGN_REF_PATH}/lef/NangateOpenCellLibrary.macro.lef" \
                    ]
 
-# Physical LEF files for macro/cell boundaries and pin geometry
-set LEF_FILES      "${DESIGN_REF_PATH}/lef/NangateOpenCellLibrary.lef"
-
 # --- 5. Parasitic Extraction Files (TLU+) ---
 # Map file and TLU+ tables for RC extraction in Fusion Compiler
 set MAP_FILE       "${DESIGN_REF_PATH}/tlup/nangate_45nm.map"
