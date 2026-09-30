@@ -16,7 +16,7 @@ if {[file exists $NDM_LIB]} {
 }
 
 # Create and open the Fusion Compiler working library
-create_lib $NDM_LIB -technology $TECH_FILE -ref_libs $LEF_FILES
+create_lib $NDM_LIB -technology $TECH_FILE -ref_libs "$LEF_FILES"
 open_lib $NDM_LIB
 
 # --- 3. Read RTL & Constraints ---
