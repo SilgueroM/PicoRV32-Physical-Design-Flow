@@ -40,7 +40,6 @@ read_parasitic_tech -tlup $TLUP_FILE -layermap $MAP_FILE -name typical_tlup
 set_parasitic_parameters -early_spec typical_tlup -late_spec typical_tlup
 
 # --- 5. Initialize Floorplan ---
-# Target: Square shape (1:1 ratio), 60% core utilization, and a 10um margin 
 initialize_floorplan -control_type core \
                      -shape R \
                      -side_ratio {1.0 1.0} \
