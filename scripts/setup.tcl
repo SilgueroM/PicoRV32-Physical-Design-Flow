@@ -28,16 +28,8 @@ set LEF_FILES      [list \
                      "${DESIGN_REF_PATH}/lef/NangateOpenCellLibrary.macro.mod.lef" \
                    ]
 
-# --- 5. Parasitic Extraction Files (TLU+) ---
-# Fixed paths based on your tlup directory structure
+# --- 5. Parasitic Extraction Files (TLU+) Paths ---
 set MAP_FILE   "${DESIGN_REF_PATH}/tlup/NangateOpenCellLibrary.layermap"
 set TLUP_FILE  "${DESIGN_REF_PATH}/tlup/NangateOpenCellLibrary.tlup"
 
-# Load TLU+ Parasitic RC models into Fusion Compiler
-puts "\[INFO\] Loading TLU+ Parasitic RC models..."
-read_parasitic_tech -tlup $TLUP_FILE -layermap $MAP_FILE -name typical_tlup
-
-# Apply the loaded RC models to the design
-set_parasitic_parameters -early_spec typical_tlup -late_spec typical_tlup
-
-puts "\[INFO\] Environment setup completed successfully for $DESIGN_NAME."
+puts "\[INFO\] Environment setup variables loaded successfully for $DESIGN_NAME."
