@@ -1,36 +1,31 @@
-################################################################################
-# PicoRV32 Placement Script 
-# Target Tool: Synopsys Fusion Compiler
-################################################################################
+# ==============================================================================
+# 3. Placement (fc_shell)
+# ==============================================================================
+puts "\[INFO\] Running place.tcl..."
 
-# --- 1. Load Environment ---
-source scripts/setup.tcl
+# --- 1. Pre-Placement Checks ---
+# Ensure the floorplan is legal and ready for standard cell placement
+check_design -checks pre_placement_stage
 
-# --- 2. Open Existing Database & Floorplan Block ---
-open_lib work/picorv32_lib.ndm
-open_block picorv32_floorplan
-
-# --- 3. Ensure Design Context & Constraints Are Active ---
-set_top_module picorv32
-link
-read_sdc design/constraints.sdc
-
-# Load the TLU+ parasitic RC models to fix the Scenario Manager errors
-read_parasitic_tech -tlup $TLU_MAX_FILE -layermap $MAP_FILE -name typical_tlup
-set_parasitic_parameters -corner default -early_spec typical_tlup -late_spec typical_tlup
-
-# --- 4. Logic Synthesis ---
-# Map the generic RTL to actual NanGate45 physical standard cells
-compile_fusion -to logic_opto
-
-# --- 5. Reconnect Power & Ground ---
-# The newly synthesized gates need their power pins hooked to the floorplan grid
-connect_pg_net -net VDD [get_pins -hierarchical "*/VDD"]
-connect_pg_net -net VSS [get_pins -hierarchical "*/VSS"]
-
-# --- 6. Placement & Timing Optimization ---
+# --- 2. Core Placement & Optimization ---
+# This single command performs global placement, high-fanout net synthesis, 
+# legalization, and physical timing optimization.
 place_opt
 
-# --- 7. Save Database ---
-save_block -as picorv32_placed
-puts "\[INFO\] Placement and optimization complete! Database saved."
+# --- 3. Tie-Cell Insertion ---
+# Logic '1' and '0' cannot be wired directly to VDD/VSS in advanced nodes without causing DRCs.
+# We connect them using NanGate45's specific Tie-High (LOGIC1_X1) and Tie-Low (LOGIC0_X1) cells.
+# (Note: Some libraries use TIEH/TIEL instead, adjust if Fusion Compiler warns about missing cells).
+connect_tie_cells -objects [get_lib_cells "*/LOGIC1_X1 */LOGIC0_X1"]
+
+# --- 4. Generate Quality of Results (QoR) Reports ---
+file mkdir reports
+report_qor > reports/01_place_qor.rpt
+report_congestion -routing_stage global > reports/01_place_congestion.rpt
+report_timing -delay_type max > reports/01_place_timing_setup.rpt
+
+# --- 5. Save the Database ---
+# Saving here allows you to close the tool and resume from CTS tomorrow without re-running placement
+save_block -as ${DESIGN_NAME}_placed
+
+puts "\[INFO\] Placement complete. Database saved to ${DESIGN_NAME}_placed."
