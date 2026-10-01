@@ -41,10 +41,11 @@ set_parasitic_parameters -early_spec typical_tlup -late_spec typical_tlup
 
 # --- 5. Initialize Floorplan ---
 # Target: Square shape (1:1 ratio), 60% core utilization, and a 10um margin 
-initialize_floorplan -control_type aspect_ratio \
-                     -core_aspect_ratio 1.0 \
+initialize_floorplan -control_type core \
+                     -shape R \
+                     -side_ratio {1.0 1.0} \
                      -core_utilization 0.6 \
-                     -boundary_offset {10 10 10 10}
+                     -core_offset {10 10 10 10}
 
 # --- 6. Power Grid Synthesis (PDN) ---
 # Define global logical power and ground nets
