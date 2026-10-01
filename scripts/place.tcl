@@ -1,40 +1,44 @@
 ################################################################################
-# 3. Placement Script (fc_shell)
+# Design & Library Setup Script for PicoRV32 Physical Design Flow
+# Target Tool: Synopsys Fusion Compiler
+# Technology: NanGate 45nm Open Cell Library
 ################################################################################
-puts "\[INFO\] Running place.tcl..."
 
-# --- 0. Setup and Load Database ---
-# Source the setup variables
-source scripts/setup.tcl
+# --- 1. Top Design Name & Paths ---
+set DESIGN_NAME           "picorv32"
+set DESIGN_REF_PATH       "libraries/NanGate45-Synopsys-Enablement/NanGate45"
 
-# If running this script standalone, we must open the library and the saved floorplan block
-set NDM_LIB "work/${DESIGN_NAME}_lib.ndm"
-if {![current_block -quiet]} {
-    puts "\[INFO\] Opening NDM library and floorplan block..."
-    open_lib $NDM_LIB
-    open_block ${DESIGN_NAME}_floorplan
+# --- 2. Search Paths ---
+set_app_var search_path ". \
+  ${DESIGN_REF_PATH}/db \
+  ${DESIGN_REF_PATH}/lib \
+  ${DESIGN_REF_PATH}/lef \
+  ${DESIGN_REF_PATH}/tf \
+  ${DESIGN_REF_PATH}/tlup \
+  design"
+
+# --- 3. Target and Link Logical Libraries (.db) ---
+set_app_var target_library "NangateOpenCellLibrary_typical.db"
+set_app_var link_library   "* NangateOpenCellLibrary_typical.db"
+
+# --- 4. Physical Technology & LEF Libraries ---
+set TECH_FILE      "${DESIGN_REF_PATH}/tf/NangateOpenCellLibrary.tf"
+set LEF_FILES      [list \
+                     "${DESIGN_REF_PATH}/lef/NangateOpenCellLibrary.tech.lef" \
+                     "${DESIGN_REF_PATH}/lef/NangateOpenCellLibrary.macro.mod.lef" \
+                   ]
+
+# --- 5. Parasitic Extraction Files (TLU+) ---
+set MAP_FILE   "${DESIGN_REF_PATH}/tlup/NangateOpenCellLibrary.layermap"
+set TLUP_FILE  "${DESIGN_REF_PATH}/tlup/NangateOpenCellLibrary.tlup"
+
+# Only load TLU+ if a design library is currently active
+if {[current_lib -quiet] ne ""} {
+    puts "\[INFO\] Loading TLU+ Parasitic RC models..."
+    read_parasitic_tech -tlup $TLUP_FILE -layermap $MAP_FILE -name typical_tlup
+    set_parasitic_parameters -early_spec typical_tlup -late_spec typical_tlup
+} else {
+    puts "\[INFO\] Skipping TLU+ load in setup.tcl (No active library yet; will load during floorplan/placement)."
 }
 
-# --- 1. Pre-Placement Checks ---
-# Ensure the floorplan is legal and ready for standard cell placement
-check_design -checks pre_placement_stage
-
-# --- 2. Core Placement & Optimization ---
-# Performs global placement, high-fanout net synthesis, legalization, and physical timing optimization.
-place_opt
-
-# --- 3. Tie-Cell Insertion ---
-# Connect logic '1' and '0' to specific Tie-High and Tie-Low cells to prevent DRC errors
-connect_tie_cells -objects [get_lib_cells "*/LOGIC1_X1 */LOGIC0_X1"]
-
-# --- 4. Generate Quality of Results (QoR) Reports ---
-file mkdir reports
-report_qor > reports/01_place_qor.rpt
-report_congestion -routing_stage global > reports/01_place_congestion.rpt
-report_timing -delay_type max > reports/01_place_timing_setup.rpt
-
-# --- 5. Save the Database ---
-# Save as a new block so we don't overwrite the floorplan
-save_block -as ${DESIGN_NAME}_placed
-
-puts "\[INFO\] Placement complete. Database saved to ${DESIGN_NAME}_placed."
+puts "\[INFO\] Environment setup completed successfully for $DESIGN_NAME."
