@@ -7,7 +7,7 @@ puts "\[INFO\] Running place.tcl..."
 source scripts/setup.tcl
 
 set NDM_LIB "work/${DESIGN_NAME}_lib.ndm"
-if {![current_block -quiet]} {
+if {[current_block -quiet] eq ""} {
     puts "\[INFO\] Opening NDM library and floorplan block..."
     open_lib $NDM_LIB
     open_block ${DESIGN_NAME}_floorplan
@@ -17,7 +17,7 @@ if {![current_block -quiet]} {
 check_design -checks pre_placement_stage
 
 # --- 2. Core Placement & Optimization ---
-# This actually runs the placement engine!
+# This runs global placement, legalization, and physical timing optimization
 place_opt
 
 # --- 3. Tie-Cell Insertion ---
