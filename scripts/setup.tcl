@@ -33,14 +33,13 @@ set LEF_FILES      [list \
                      "${DESIGN_REF_PATH}/lef/NangateOpenCellLibrary.macro.mod.lef" \
                    ]
 
-# --- 5. Parasitic Extraction Files (TLU+) ---
-# Correct filenames based on the actual repository structure
+# --- Parasitic Extraction Files (TLU+) ---
 set MAP_FILE   "${DESIGN_REF_PATH}/tlup/NangateOpenCellLibrary.layermap"
 set TLUP_FILE  "${DESIGN_REF_PATH}/tlup/NangateOpenCellLibrary.tlup"
 
 # Read the parasitic technology into Fusion Compiler
 puts "\[INFO\] Loading TLU+ Parasitic RC models..."
-read_parasitic_tech -tlup $TLUP_FILE -layermap $MAP_FILE -name typical_rc
+read_parasitic_tech -tlup $TLUP_FILE -layermap $MAP_FILE -name typical_tlup
 
 # Apply the loaded RC models to the current design
 set_parasitic_parameters -early_spec typical_rc -late_spec typical_rc
