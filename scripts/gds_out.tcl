@@ -12,8 +12,8 @@ if {[current_block -quiet] eq ""} {
     open_block ${DESIGN_NAME}_routed
 }
 
-# --- 1. Insert Fillers (Basic Form) ---
-create_stdcell_fillers
+# --- 1. Insert Standard Cell Fillers ---
+create_stdcell_fillers -lib_cells {FILLCELL_X8 FILLCELL_X4 FILLCELL_X2 FILLCELL_X1}
 
 # --- 2. Save Final Block & Export GDSII ---
 save_block -as ${DESIGN_NAME}_final
