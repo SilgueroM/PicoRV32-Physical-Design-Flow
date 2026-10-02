@@ -25,9 +25,9 @@ add_tie_cells -objects [get_lib_cells "*/LOGIC1_X1 */LOGIC0_X1"]
 
 # --- 4. Generate Quality of Results (QoR) Reports ---
 file mkdir reports
-report_qor > reports/01_place_qor.rpt
-report_congestion -routing_stage global > reports/01_place_congestion.rpt
-report_timing -delay_type max > reports/01_place_timing_setup.rpt
+report_qor -file reports/01_place_qor.rpt
+report_congestion -routing_stage global -file reports/01_place_congestion.rpt
+report_timing -delay_type max -file reports/01_place_timing_setup.rpt
 
 # --- 5. Save the Database ---
 save_block -as ${DESIGN_NAME}_placed
