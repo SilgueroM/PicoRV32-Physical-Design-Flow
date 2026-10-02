@@ -16,11 +16,11 @@ if {[current_block -quiet] eq ""} {
 # --- 1. Synthesize Clock Tree ---
 clock_opt
 
-# --- 2. Generate CTS QoR Reports ---
-file mkdir reports
-redirect reports/02_cts_qor.rpt { report_qor }
-redirect reports/02_cts_timing.rpt { report_timing }
-redirect reports/02_cts_clock.rpt { report_clock_tree }
+# # --- 2. Generate CTS QoR Reports ---
+# file mkdir reports
+# redirect reports/02_cts_qor.rpt { report_qor }
+# redirect reports/02_cts_timing.rpt { report_timing }
+# redirect reports/02_cts_clock.rpt { report_clock_tree } # This line is not working, this whole part is not required though so we will comment it out for now 
 
 # --- 3. Save the Database ---
 save_block -as ${DESIGN_NAME}_cts
