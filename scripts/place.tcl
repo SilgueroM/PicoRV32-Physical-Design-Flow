@@ -21,8 +21,7 @@ check_design -checks pre_placement_stage
 place_opt
 
 # --- 3. Tie-Cell Insertion ---
-# --- 3. Tie-Cell Insertion ---
-insert_tie_cells -objects [get_lib_cells "*/LOGIC1_X1 */LOGIC0_X1"]
+add_tie_cells -objects [get_lib_cells "*/LOGIC1_X1 */LOGIC0_X1"]
 
 # --- 4. Generate Quality of Results (QoR) Reports ---
 file mkdir reports
