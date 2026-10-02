@@ -22,8 +22,8 @@ place_opt
 # --- 3. Generate Quality of Results (QoR) Reports ---
 file mkdir reports
 redirect reports/01_place_qor.rpt { report_qor }
-redirect reports/01_place_congestion.rpt { report_congestion -routing_stage global }
-redirect reports/01_place_timing_setup.rpt { report_timing -delay_type max }
+redirect reports/01_place_congestion.rpt { report_congestion }
+redirect reports/01_place_timing_setup.rpt { report_timing }
 
 # --- 4. Save the Database ---
 save_block -as ${DESIGN_NAME}_placed
