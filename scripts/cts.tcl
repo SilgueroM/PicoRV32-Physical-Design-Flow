@@ -14,13 +14,12 @@ if {[current_block -quiet] eq ""} {
 }
 
 # --- 1. Synthesize Clock Tree ---
-# Synthesizes clock buffers, balances skew, and optimizes hold/setup around the clock network
-clock_opt -from_clock_tree -to_clock_tree
+clock_opt
 
 # --- 2. Generate CTS QoR Reports ---
 file mkdir reports
 redirect reports/02_cts_qor.rpt { report_qor }
-redirect reports/02_cts_timing.rpt { report_timing -delay_type max }
+redirect reports/02_cts_timing.rpt { report_timing }
 redirect reports/02_cts_clock.rpt { report_clock_tree }
 
 # --- 3. Save the Database ---
