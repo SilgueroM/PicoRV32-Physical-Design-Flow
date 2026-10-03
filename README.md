@@ -44,14 +44,14 @@ PicoRV32-Physical-Design-Flow/
 
 | Stage | Script Name | Synopsys Tool / Engine | Description & Function |
 | :--- | :--- | :--- | :--- |
-| 1. Setup | setup.tcl | fc_shell | Initializes global variables, sets up search paths, maps target and link libraries (.db, .lef), and creates the working NDM database library (work/). |
-| 2. Floorplan | floorplan.tcl | fc_shell | Defines the core bounding box dimensions, aspect ratio, core-to-boundary margins, power rings/stripes, and physical pin locations for the core. |
-| 3. Placement | place.tcl | fc_shell | Places standard cells across legal site rows while optimizing for timing, congestion, and wirelength reduction (place_opt). |
-| 4. Clock Tree Synthesis | cts.tcl | fc_shell | Builds a balanced clock distribution network to minimize clock skew and insertion delay across all sequential registers (clock_opt). |
-| 5. Routing | route.tcl | fc_shell | Performs global routing, track assignment, and detailed routing (route_opt) to connect all nets cleanly with zero DRC violations. |
-| 6. Parasitic Extraction | pex.tcl | Integrated StarRC | Extracts accurate resistance and capacitance (RC) parasitics from physical metal geometries, generating database-ready routing parasitics. |
-| 7. Static Timing Analysis | sta.tcl | Integrated PrimeTime | Executes signoff-grade timing verification using extracted parasitics, confirming setup/hold margin closure across design corners. |
-| 8. GDSII Export | gds_out.tcl | fc_shell | Inserts standard cell fillers (create_stdcell_fillers), performs metal fill, saves the final block database, and streams out the layout (write_gds). |
+| **1. Setup** | `setup.tcl` | `fc_shell` (Fusion Compiler) | Initializes global variables, sets up search paths, maps target and link libraries (`.db`, `.lef`), and creates the working NDM database library (`work/`). |
+| **2. Floorplan** | `floorplan.tcl` | `fc_shell` (Fusion Compiler) | Defines the core bounding box dimensions, aspect ratio, core-to-boundary margins, power rings/stripes, and physical pin locations for the core. |
+| **3. Placement** | `place.tcl` | `fc_shell` (Fusion Compiler) | Places standard cells across legal site rows while optimizing for timing, congestion, and wirelength reduction (`place_opt`). |
+| **4. CTS** | `cts.tcl` | `fc_shell` (Fusion Compiler) | Builds a balanced clock distribution network to minimize clock skew and insertion delay across all sequential registers (`clock_opt`). |
+| **5. Routing** | `route.tcl` | `fc_shell` (Fusion Compiler) | Performs global routing, track assignment, and detailed routing (`route_opt`) to connect all nets cleanly with zero DRC violations. |
+| **6. Extraction**| `pex.tcl` | Integrated **StarRC** | Extracts accurate resistance and capacitance (RC) parasitics from physical metal geometries, generating database-ready routing parasitics. |
+| **7. STA** | `sta.tcl` | Integrated **PrimeTime** | Executes signoff-grade timing verification using extracted parasitics, confirming setup/hold margin closure across design corners. |
+| **8. GDSII** | `gds_out.tcl` | `fc_shell` (Fusion Compiler) | Inserts standard cell fillers (`create_stdcell_fillers`), saves the final block database, and streams out the layout (`write_gds`). |
 
 ---
 
@@ -115,3 +115,15 @@ Upon successful completion of the flow, the following deliverables are generated
 * picorv32.gds: The final GDSII stream file containing complete layout geometries for fabrication handoff or layout viewing (e.g., KLayout).
 * picorv32.def: Design Exchange Format file containing exact placement coordinates and routing topologies.
 * picorv32_routed.v: Gate-level Verilog netlist including inserted filler cells and buffered clock trees.
+
+## Acknowledgements & Licensing
+
+*   **PicoRV32:** The RISC-V core used in this flow was developed by Clifford Wolf and is distributed under the ISC License.
+*   **NanGate45 Synopsys Enablement:** The Synopsys-compatible technology files, Liberty files, and NDM library generation foundations used in this physical design environment are provided by the [ABKGroup NanGate45-Synopsys-Enablement repository](https://github.com/ABKGroup/NanGate45-Synopsys-Enablement/tree/main). 
+
+**ABKGroup License (BSD 3-Clause):**
+Copyright (c) 2025, ABKGroup. 
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
