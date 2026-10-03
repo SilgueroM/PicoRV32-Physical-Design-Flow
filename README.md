@@ -20,8 +20,9 @@ Commercial electronic design automation (EDA) software suite from Synopsys is tr
 
 ## Repository Structure & Startup Menu
 
-The flow is modularized into sequential Tcl scripts housed within the scripts/ directory, managed either individually or executed collectively via a master runner (run_flow.tcl).
+The flow is modularized into sequential Tcl scripts housed within the `scripts/` directory, managed either individually or executed collectively via a master runner (`run_flow.tcl`).
 
+```
 PicoRV32-Physical-Design-Flow/
 ├── rtl/                  # PicoRV32 Verilog source files
 ├── constraints/          # SDC (Synopsys Design Constraints) files
@@ -37,8 +38,7 @@ PicoRV32-Physical-Design-Flow/
 ├── work/                 # Working NDM databases and compiled libraries
 ├── outputs/              # Final exported GDSII, DEF, and Verilog netlists
 └── run_flow.tcl          # Master execution script linking the entire pipeline
-
----
+```
 
 ## Detailed Step-by-Step Flow & Tool Mapping
 
